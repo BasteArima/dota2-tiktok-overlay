@@ -6,6 +6,10 @@
 > Instagram Reels to the Dota 2 main menu, hero pick and in-game HUD. Run `python build.py` (game closed),
 > re-run after every Dota update. Details below are in Russian.
 
+![В матче](docs/ingame.jpg)
+
+![В главном меню](docs/menu.jpg)
+
 ## Возможности
 
 - Окно открывается кнопкой у левого края экрана или клавишей **F8**.
@@ -19,7 +23,17 @@
 
 ## Установка
 
-Нужны Windows и [Python](https://www.python.org/downloads/) 3.9 или новее.
+### Проще всего: exe
+
+1. Скачай `dota2-tiktok-overlay.exe` со страницы [Releases](../../releases/latest).
+2. **Закрой Доту** и запусти exe двойным кликом.
+
+Windows SmartScreen или антивирус могут ругаться на неподписанный exe, собранный PyInstaller.
+Если не доверяешь, используй вариант с Python ниже: exe собирается из того же `build.py`.
+
+### Через Python
+
+Нужен [Python](https://www.python.org/downloads/) 3.9 или новее.
 
 1. Скачай репозиторий: зелёная кнопка **Code → Download ZIP** и распакуй, или `git clone`.
 2. **Закрой Доту** и запусти в папке мода:
@@ -28,27 +42,29 @@
    python build.py
    ```
 
-   Скрипт сам найдёт Доту и установит мод:
-   - если стоит [Dota 2 Mod Manager](https://dota2modmanager.com) — в его папку, рядом с остальными модами;
-   - иначе — в `game/dota_tempcontent`. Тогда в Steam добавь Доте параметр запуска
-     `-language tempcontent` (Библиотека → Dota 2 → Свойства → Параметры запуска).
-     Это распространённый способ подключения модов, но я проверял мод только с Mod Manager.
+### Куда ставится мод
 
-   Если игра не нашлась сама, укажи путь:
+И exe, и `build.py` сами находят Доту и ставят мод:
 
-   ```bash
-   python build.py --game "D:\SteamLibrary\steamapps\common\dota 2 beta\game"
-   ```
+- если стоит [Dota 2 Mod Manager](https://dota2modmanager.com) — в его папку, рядом с остальными модами;
+- иначе — в `game/dota_tempcontent`. Тогда в Steam добавь Доте параметр запуска
+  `-language tempcontent` (Библиотека → Dota 2 → Свойства → Параметры запуска).
+  Это распространённый способ подключения модов, но я проверял мод только с Mod Manager.
 
-3. **После каждого обновления Доты запускай `python build.py` снова.** Мод встраивается в файлы
-   интерфейса игры, и после патча старая версия может сломать меню или HUD.
+Если игра не нашлась сама, укажи путь (для exe — то же самое, только `dota2-tiktok-overlay.exe` вместо `python build.py`):
+
+```bash
+python build.py --game "D:\SteamLibrary\steamapps\common\dota 2 beta\game"
+```
+
+> **После каждого обновления Доты запускай exe или `python build.py` снова.** Мод встраивается в файлы
+> интерфейса игры, и после патча старая версия может сломать меню или HUD.
 
 Удалить мод:
 
 ```bash
 python build.py --uninstall
 ```
-
 ## Настройка
 
 Горячую клавишу можно сменить в настройках окна (шестерёнка), но только до перезапуска Доты.
@@ -62,6 +78,7 @@ python build.py --key f9
 `backquote`, буквы и цифры (`a`, `5`), `pad_0`…`pad_9`.
 
 Список сервисов, их адреса и размер окна по умолчанию задаются в [config.json](config.json).
+Для exe положи свой `config.json` рядом с ним: он заменит встроенный.
 
 ## Ограничения
 
@@ -92,6 +109,12 @@ Steam и Dota 2. Используешь на свой страх и риск, в
 - Перетаскивание и ресайз: опрос `GameUI.IsMouseDown` / `GameUI.GetCursorPosition`.
 - Меню и HUD — разные окна интерфейса. Общее состояние хранится в `GameUI.CustomUIConfig()`,
   смена экрана отслеживается по событию `DOTAGameUIStateChanged`.
+
+### Сборка exe
+
+```bash
+python -m PyInstaller --onefile --console --name dota2-tiktok-overlay --add-data "overlay.js;." --add-data "config.json;." build.py
+```
 
 ### Отладка
 

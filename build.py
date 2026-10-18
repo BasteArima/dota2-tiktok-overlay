@@ -21,7 +21,11 @@ TARGETS = {
     "panorama/scripts/hud/hud_reborn.vjs_c": "in-game HUD incl. hero pick",
 }
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+FROZEN = getattr(sys, "frozen", False)  # running as the PyInstaller .exe
+# overlay.js and the default config.json: bundled inside the .exe, or next to this script
+RES_DIR = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+# user-editable config.json and the build/ output: next to the .exe, or next to this script
+HERE = os.path.dirname(os.path.abspath(sys.executable if FROZEN else __file__))
 
 
 # ---------- VPK ----------
@@ -179,13 +183,14 @@ def main():
         return
 
     config_path = os.path.join(HERE, "config.json")
-    with open(config_path, encoding="utf-8") as f:
+    source = config_path if os.path.exists(config_path) else os.path.join(RES_DIR, "config.json")
+    with open(source, encoding="utf-8") as f:
         config = json.load(f)
     if args.key:
         config["hotkey"] = args.key.lower().removeprefix("key_")
         with open(config_path, "w", encoding="utf-8") as f:
             json.dump(config, f, ensure_ascii=False, indent=2)
-    with open(os.path.join(HERE, "overlay.js"), encoding="utf-8") as f:
+    with open(os.path.join(RES_DIR, "overlay.js"), encoding="utf-8") as f:
         overlay = f.read()
     if "__DD_CONFIG__" not in overlay:
         raise SystemExit("overlay.js: __DD_CONFIG__ placeholder missing")
@@ -213,4 +218,14 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        code = main()
+    except SystemExit as e:
+        code = e.code
+        if isinstance(code, str):
+            print(code, file=sys.stderr)
+            code = 1
+    if FROZEN and len(sys.argv) == 1:
+        # started by double-click: keep the console window open to show the result
+        input("\nPress Enter to close / Нажми Enter, чтобы закрыть")
+    sys.exit(code)
