@@ -1,3 +1,5 @@
+![Dota 2 TikTok Overlay](docs/banner.png)
+
 # Dota 2 TikTok overlay
 
 Окно с **TikTok, YouTube Shorts и Instagram Reels** прямо в интерфейсе Dota 2: в главном меню, на выборе героя и в матче.
