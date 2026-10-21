@@ -20,6 +20,8 @@ TARGETS = {
     "panorama/scripts/play.vts_c": "main menu (dashboard)",
     "panorama/scripts/hud/hud_reborn.vjs_c": "in-game HUD incl. hero pick",
 }
+# user stylesheet the HTML panel injects into every web page (plain CSS in core/pak01); page.css is appended
+PAGE_CSS = "panorama/browser/webkit.css"
 
 FROZEN = getattr(sys, "frozen", False)  # running as the PyInstaller .exe
 # overlay.js and the default config.json: bundled inside the .exe, or next to this script
@@ -203,6 +205,13 @@ def main():
         original = vpk_read_file(pak01, path)
         files[path] = resource_replace_data(original, append_js(overlay))
         print(f"patched {path} ({where}): {len(original)} -> {len(files[path])} bytes")
+
+    page_css_path = os.path.join(RES_DIR, "page.css")
+    if os.path.exists(page_css_path):
+        original = vpk_read_file(os.path.join(game, "core", "pak01_dir.vpk"), PAGE_CSS)
+        with open(page_css_path, "rb") as f:
+            files[PAGE_CSS] = original.rstrip(b"\0") + b"\n" + f.read()
+        print(f"patched {PAGE_CSS} (styles inside web pages): {len(original)} -> {len(files[PAGE_CSS])} bytes")
 
     os.makedirs(os.path.join(HERE, "build"), exist_ok=True)
     out = os.path.join(HERE, "build", VPK_NAME)

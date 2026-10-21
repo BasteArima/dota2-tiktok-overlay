@@ -1,0 +1,74 @@
+
+/* ===== Shorts overlay mod (appended by dota_tiktok_mod/build.py) =====
+   The game passes panorama/browser/webkit.css to the Steam browser as a user stylesheet,
+   so these rules apply to every page opened in the overlay.
+
+   Wheel scrolling in the game's browser does not snap to the next video, but the sites'
+   own "previous / next video" buttons do. The sites hide them in a narrow window, so we
+   force them visible and pin them to the right edge of the window, above the like/comment
+   column. */
+
+/* The browser may add this file as an ordinary page stylesheet, so a site rule with !important
+   can win on specificity. Selectors are repeated on purpose to make them heavier. */
+
+/* ---- TikTok: hidden via the --display-feed-nav-buttons variable (inline display: var(...)) ---- */
+html body * {
+	--display-feed-nav-buttons: flex !important;
+}
+html body div[class*="DivFeedNavigationContainer"][class*="DivFeedNavigationContainer"][class*="DivFeedNavigationContainer"] {
+	--display-feed-nav-buttons: flex !important;
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 10px !important;
+	position: fixed !important;
+	top: 38% !important;
+	right: 10px !important;
+	left: auto !important;
+	inset-inline-start: auto !important;
+	inset-inline-end: 10px !important;
+	transform: translateY(-50%) !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	z-index: 2147483000 !important;
+}
+html body div[class*="DivFeedNavigationContainer"][class*="DivFeedNavigationContainer"] > div,
+html body button[data-e2e^="feed-navigation-"][data-e2e^="feed-navigation-"] {
+	display: flex !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+/* ---- YouTube Shorts ---- */
+ytd-shorts .navigation-container {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 10px !important;
+	position: fixed !important;
+	top: 38% !important;
+	right: 10px !important;
+	left: auto !important;
+	width: auto !important;
+	height: auto !important;
+	margin: 0 !important;
+	transform: translateY(-50%) !important;
+	visibility: visible !important;
+	z-index: 2147483000 !important;
+}
+ytd-shorts .navigation-button {
+	display: block !important;
+	visibility: visible !important;
+}
+
+/* ---- Instagram Reels: the toolbar's aria-label contains "Reels" in every language ---- */
+div[role="toolbar"][aria-label*="Reels"] {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 10px !important;
+	position: fixed !important;
+	top: 38% !important;
+	right: 10px !important;
+	left: auto !important;
+	transform: translateY(-50%) !important;
+	visibility: visible !important;
+	z-index: 2147483000 !important;
+}
