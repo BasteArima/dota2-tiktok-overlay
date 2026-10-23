@@ -209,8 +209,9 @@ def main():
     page_css_path = os.path.join(RES_DIR, "page.css")
     if os.path.exists(page_css_path):
         original = vpk_read_file(os.path.join(game, "core", "pak01_dir.vpk"), PAGE_CSS)
-        with open(page_css_path, "rb") as f:
-            files[PAGE_CSS] = original.rstrip(b"\0") + b"\n" + f.read()
+        # text mode normalizes line endings, so a CRLF checkout (e.g. on CI) builds the same bytes
+        with open(page_css_path, encoding="utf-8") as f:
+            files[PAGE_CSS] = original.rstrip(b"\0") + b"\n" + f.read().encode("utf-8")
         print(f"patched {PAGE_CSS} (styles inside web pages): {len(original)} -> {len(files[PAGE_CSS])} bytes")
 
     os.makedirs(os.path.join(HERE, "build"), exist_ok=True)
