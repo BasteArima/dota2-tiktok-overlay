@@ -31,6 +31,9 @@
 1. Скачай `dota2-tiktok-overlay.exe` со страницы [Releases](../../releases/latest).
 2. **Закрой Доту** и запусти exe двойным кликом.
 
+Exe собирается [GitHub Actions](../../actions/workflows/release.yml) прямо из исходников этого репозитория
+при каждом релизе. Рядом лежит `.sha256` с контрольной суммой файла.
+
 Windows SmartScreen или антивирус могут ругаться на неподписанный exe, собранный PyInstaller.
 Если не доверяешь, используй вариант с Python ниже: exe собирается из того же `build.py`.
 
@@ -119,6 +122,9 @@ Steam и Dota 2. Используешь на свой страх и риск, в
   смена экрана отслеживается по событию `DOTAGameUIStateChanged`.
 
 ### Сборка exe
+
+Релизный exe собирает workflow [.github/workflows/release.yml](.github/workflows/release.yml): он запускается
+при публикации релиза и прикладывает к нему exe и `.sha256`. Локально то же самое:
 
 ```bash
 python -m PyInstaller --onefile --console --name dota2-tiktok-overlay --add-data "overlay.js;." --add-data "config.json;." --add-data "page.css;." build.py

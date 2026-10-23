@@ -1,0 +1,55 @@
+# Builds dota2-tiktok-overlay.exe from the sources in this repository with PyInstaller.
+# - Publishing a GitHub release attaches the exe and its SHA-256 checksum to that release.
+# - Running the workflow manually (Actions -> Build exe -> Run workflow) only uploads the exe as an artifact.
+name: Build exe
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write  # upload assets to the release
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyInstaller
+        run: python -m pip install pyinstaller==6.21.0
+
+      - name: Build exe
+        run: >
+          python -m PyInstaller --onefile --console --name dota2-tiktok-overlay
+          --add-data "overlay.js;." --add-data "config.json;." --add-data "page.css;."
+          build.py
+
+      - name: Smoke test
+        # the game is not installed here, so only check that the exe starts and parses arguments
+        run: dist\dota2-tiktok-overlay.exe --help
+
+      - name: Checksum
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash dist\dota2-tiktok-overlay.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  dota2-tiktok-overlay.exe" | Set-Content -NoNewline -Encoding ascii dist\dota2-tiktok-overlay.exe.sha256
+          Get-Content dist\dota2-tiktok-overlay.exe.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dota2-tiktok-overlay
+          path: |
+            dist/dota2-tiktok-overlay.exe
+            dist/dota2-tiktok-overlay.exe.sha256
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/dota2-tiktok-overlay.exe dist/dota2-tiktok-overlay.exe.sha256 --clobber
