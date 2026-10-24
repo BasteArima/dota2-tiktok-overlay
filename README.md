@@ -31,8 +31,8 @@
 1. Скачай `dota2-tiktok-overlay.exe` со страницы [Releases](../../releases/latest).
 2. **Закрой Доту** и запусти exe двойным кликом.
 
-Exe собирается [GitHub Actions](../../actions/workflows/release.yml) прямо из исходников этого репозитория
-при каждом релизе. Рядом лежит `.sha256` с контрольной суммой файла.
+Exe и сами релизы делает [GitHub Actions](../../actions/workflows/release.yml) прямо из исходников этого
+репозитория. SHA-256 файла GitHub показывает рядом с ним на странице релиза.
 
 Windows SmartScreen или антивирус могут ругаться на неподписанный exe, собранный PyInstaller.
 Если не доверяешь, используй вариант с Python ниже: exe собирается из того же `build.py`.
@@ -123,8 +123,10 @@ Steam и Dota 2. Используешь на свой страх и риск, в
 
 ### Сборка exe
 
-Релизный exe собирает workflow [.github/workflows/release.yml](.github/workflows/release.yml): он запускается
-при публикации релиза и прикладывает к нему exe и `.sha256`. Локально то же самое:
+Релизы делает workflow [.github/workflows/release.yml](.github/workflows/release.yml): **Actions → Build exe →
+Run workflow**, в поле version указать новый тег (например `v1.2.0`). Он соберёт exe, создаст тег и релиз
+на текущем коммите и приложит exe. С пустым version workflow только собирает exe в артефакт.
+Собрать exe локально:
 
 ```bash
 python -m PyInstaller --onefile --console --name dota2-tiktok-overlay --add-data "overlay.js;." --add-data "config.json;." --add-data "page.css;." build.py

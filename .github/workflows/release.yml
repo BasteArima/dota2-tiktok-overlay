@@ -1,21 +1,45 @@
 # Builds dota2-tiktok-overlay.exe from the sources in this repository with PyInstaller.
-# - Publishing a GitHub release attaches the exe and its SHA-256 checksum to that release.
-# - Running the workflow manually (Actions -> Build exe -> Run workflow) only uploads the exe as an artifact.
+# - Actions -> Build exe -> Run workflow with a version (e.g. v1.2.0): builds the exe, creates that tag
+#   and a release on the current commit and attaches the exe. GitHub shows its SHA-256 next to the file.
+# - Run workflow with an empty version: only builds the exe and keeps it as a run artifact.
+# - Publishing a release by hand also works: the exe is attached to that release.
 name: Build exe
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag, e.g. v1.2.0 (empty = only build the exe)"
+        required: false
+        type: string
+      notes:
+        description: "Release notes (optional; the list of commits is added automatically)"
+        required: false
+        type: string
   release:
     types: [published]
-  workflow_dispatch:
 
 permissions:
-  contents: write  # upload assets to the release
+  contents: write  # create the tag/release and upload the exe
 
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      VERSION: ${{ inputs.version }}
+      NOTES: ${{ inputs.notes }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check version
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        shell: pwsh
+        run: |
+          if ($env:VERSION -notmatch '^v\d+\.\d+\.\d+$') { throw "Version must look like v1.2.0, got '$env:VERSION'" }
+          gh release view $env:VERSION *> $null
+          if ($LASTEXITCODE -eq 0) { throw "Release $env:VERSION already exists" }
+          $global:LASTEXITCODE = 0
 
       - uses: actions/setup-python@v5
         with:
@@ -34,22 +58,19 @@ jobs:
         # the game is not installed here, so only check that the exe starts and parses arguments
         run: dist\dota2-tiktok-overlay.exe --help
 
-      - name: Checksum
-        shell: pwsh
-        run: |
-          $hash = (Get-FileHash dist\dota2-tiktok-overlay.exe -Algorithm SHA256).Hash.ToLower()
-          "$hash  dota2-tiktok-overlay.exe" | Set-Content -NoNewline -Encoding ascii dist\dota2-tiktok-overlay.exe.sha256
-          Get-Content dist\dota2-tiktok-overlay.exe.sha256
-
       - uses: actions/upload-artifact@v4
         with:
           name: dota2-tiktok-overlay
-          path: |
-            dist/dota2-tiktok-overlay.exe
-            dist/dota2-tiktok-overlay.exe.sha256
+          path: dist/dota2-tiktok-overlay.exe
+
+      - name: Create release
+        if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+        shell: pwsh
+        run: |
+          $notesArgs = if ($env:NOTES) { @('--notes', $env:NOTES) } else { @() }
+          gh release create $env:VERSION dist/dota2-tiktok-overlay.exe --target $env:GITHUB_SHA --title $env:VERSION --generate-notes @notesArgs
 
       - name: Attach to release
         if: github.event_name == 'release'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/dota2-tiktok-overlay.exe dist/dota2-tiktok-overlay.exe.sha256 --clobber
+        shell: pwsh
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/dota2-tiktok-overlay.exe --clobber
