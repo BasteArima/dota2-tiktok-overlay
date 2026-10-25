@@ -198,22 +198,14 @@
             each(shared, i => i.refresh());
         });
         textButton(settingRow("Положение и размер окна"), "Сбросить", "Вернуть как было", () => { S.rect = null; applyRect(); });
-        // Sign-in with Google/Facebook/Apple needs popup windows, which this panel can't host. The Steam overlay
-        // browser can, and it shares cookies with this panel, so logging in there once is enough.
-        textButton(settingRow("Войти через браузер Steam"), "Открыть", "Открыть сервис в оверлее Steam (Shift+Tab)", () => {
-            const url = lastUrl(S.service);
-            log("login via ExternalBrowserGoToURL: " + url);
-            setOpen(false);
-            try { $.DispatchEvent("ExternalBrowserGoToURL", url); } catch (e) { log("ExternalBrowserGoToURL failed: " + e); }
-        });
         const note = css($.CreatePanel("Label", settings, ""), { color: "#ffffff88", fontSize: "13px", marginTop: "8px", width: "100%" });
         note.text = "Клавиша применяется при закрытии настроек и действует до перезапуска Доты, " +
             "постоянная задаётся через python build.py --key f9.\n\n" +
-            "Печатать (логин, коды, поиск) можно в главном меню. В матче нажми кнопку «Меню» слева вверху " +
-            "(стрелка вверх): это окно откроется там на той же странице. Или открой консоль Доты, " +
-            "пока она открыта, ввод работает.\n\n" +
-            "Google, Facebook и Apple в этом окне не входят. Войди на сайте в оверлее Steam " +
-            "(Shift+Tab или кнопка «Открыть» выше), закрой его и нажми «обновить» в окне.";
+            "Набор текста (логин, коды, поиск) работает только в главном меню. В матче нажми «Меню» " +
+            "слева вверху (стрелка вверх), окно откроется там на той же странице. Или открой консоль Доты: " +
+            "пока она открыта, печатать можно.\n\n" +
+            "Google, Facebook и Apple в этом окне не входят. Войди на сайте в оверлее Steam (Shift+Tab), " +
+            "закрой его и нажми «обновить» в окне.";
 
         function showSettings(show) {
             settings.visible = show;
