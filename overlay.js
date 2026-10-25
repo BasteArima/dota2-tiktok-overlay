@@ -201,11 +201,11 @@
         const note = css($.CreatePanel("Label", settings, ""), { color: "#ffffff88", fontSize: "13px", marginTop: "8px", width: "100%" });
         note.text = "Клавиша применяется при закрытии настроек и действует до перезапуска Доты, " +
             "постоянная задаётся через python build.py --key f9.\n\n" +
-            "Набор текста (логин, коды, поиск) работает только в главном меню. В матче нажми «Меню» " +
-            "слева вверху (стрелка вверх), окно откроется там на той же странице. Или открой консоль Доты: " +
+            "Набор текста (логин, коды, поиск) работает только в главном меню. В матче нажмите «Меню» " +
+            "слева вверху (стрелка вверх), окно откроется там на той же странице. Или откройте консоль Доты: " +
             "пока она открыта, печатать можно.\n\n" +
-            "Google, Facebook и Apple в этом окне не входят. Войди на сайте в оверлее Steam (Shift+Tab), " +
-            "закрой его и нажми «обновить» в окне.";
+            "Google, Facebook и Apple в этом окне не входят. Войдите на сайте в оверлее Steam (Shift+Tab), " +
+            "закройте его и нажмите «обновить» в окне.";
 
         function showSettings(show) {
             settings.visible = show;
@@ -220,7 +220,7 @@
         });
         const gripImg = $.CreatePanel("Image", grip, "", { src: ICONS + "arrow_bottom_right.vsvg", scaling: "stretch-to-fit-preserve-aspect" });
         css(gripImg, { width: "16px", height: "16px", horizontalAlign: "center", verticalAlign: "center", washColor: "#ffffff" });
-        hover(grip, "Потяни, чтобы изменить размер");
+        hover(grip, "Потяните, чтобы изменить размер");
 
         // ---- edge toggle button ----
         const toggleBtn = css($.CreatePanel("Button", overlay, ""), {
