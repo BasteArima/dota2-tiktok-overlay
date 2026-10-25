@@ -99,6 +99,7 @@
         const boundKeys = {};
         const buttons = [];   // header buttons (not a drag handle)
         let ticking = false, drag = null, wasDown = false, tickCount = 0, pendingKey = null;
+        let keyFocus = null;  // the browser panel that currently has keyboard focus
 
         const overlay = css($.CreatePanel("Panel", root, MOD_ID), { width: "100%", height: "100%" });
         overlay.hittest = false;
@@ -197,9 +198,22 @@
             each(shared, i => i.refresh());
         });
         textButton(settingRow("Положение и размер окна"), "Сбросить", "Вернуть как было", () => { S.rect = null; applyRect(); });
+        // Sign-in with Google/Facebook/Apple needs popup windows, which this panel can't host. The Steam overlay
+        // browser can, and it shares cookies with this panel, so logging in there once is enough.
+        textButton(settingRow("Войти через браузер Steam"), "Открыть", "Открыть сервис в оверлее Steam (Shift+Tab)", () => {
+            const url = lastUrl(S.service);
+            log("login via ExternalBrowserGoToURL: " + url);
+            setOpen(false);
+            try { $.DispatchEvent("ExternalBrowserGoToURL", url); } catch (e) { log("ExternalBrowserGoToURL failed: " + e); }
+        });
         const note = css($.CreatePanel("Label", settings, ""), { color: "#ffffff88", fontSize: "13px", marginTop: "8px", width: "100%" });
         note.text = "Клавиша применяется при закрытии настроек и действует до перезапуска Доты, " +
-            "постоянная задаётся через python build.py --key f9.";
+            "постоянная задаётся через python build.py --key f9.\n\n" +
+            "Печатать (логин, коды, поиск) можно в главном меню. В матче клавиатура остаётся у игры: " +
+            "нажми Esc, окно переедет в меню на ту же страницу.\n\n" +
+            "Вход через Google, Facebook и Apple в этом окне не работает (нужны всплывающие окна). " +
+            "Нажми «Открыть» выше, войди в оверлее Steam, закрой его и нажми «обновить» в окне: " +
+            "вход общий. Или входи по QR-коду, номеру или логину.";
 
         function showSettings(show) {
             settings.visible = show;
@@ -275,6 +289,14 @@
                         : { x: drag.r.x, y: drag.r.y, w: drag.r.w + dx, h: drag.r.h + dy };
                     applyRect();
                 }
+                // keyboard goes to the page only while the cursor is over the window, otherwise to the game
+                // (the game can take focus back, so keep re-asserting it a few times per second)
+                const cur = browsers[S.service];
+                if (hit(win, c) && !settings.visible && cur && cur.html.IsValid()) {
+                    if (keyFocus !== cur.html || tickCount % 15 === 0) giveKeys(cur.html);
+                } else if (keyFocus && !drag) {
+                    takeKeys();
+                }
                 if (tickCount++ % 30 === 0) for (const id in browsers) hidePanCursor(browsers[id].html);
             } catch (e) {
                 log("tick error: " + e);
@@ -283,6 +305,17 @@
         }
 
         // ---- browsers ----
+        let focusLogged = false;
+        function giveKeys(html) {
+            try { html.SetFocus(); } catch (e) { log("SetFocus failed: " + e); }
+            try { $.DispatchEvent("SetInputFocus", html); } catch (e) { log("SetInputFocus failed: " + e); }
+            keyFocus = html;
+            if (!focusLogged) { focusLogged = true; log("keyboard -> browser"); }
+        }
+        function takeKeys() {
+            try { if (keyFocus.IsValid()) $.DispatchEvent("DropInputFocus", keyFocus); } catch (e) { log("DropInputFocus failed: " + e); }
+            keyFocus = null;
+        }
         function hidePanCursor(html) {
             // the HTML panel draws a 4-arrow "mouse panning" image in its corner; we don't need it
             const img = html.IsValid() && html.FindChildTraverse("MousePanningImage");
@@ -320,10 +353,10 @@
             const pid = MOD_ID + "_" + id;
             let html = null;
             try {
-                html = $.CreatePanel("HTML", layer, pid, { url: url, acceptsinput: "true" });
+                html = $.CreatePanel("HTML", layer, pid, { url: url, acceptsinput: "true", acceptsfocus: "true", focusonhover: "true" });
             } catch (e) { log("CreatePanel(HTML) failed: " + e); }
             if (!html) {
-                layer.BCreateChildren('<HTML id="' + pid + '" url="' + url + '" acceptsinput="true" />');
+                layer.BCreateChildren('<HTML id="' + pid + '" url="' + url + '" acceptsinput="true" acceptsfocus="true" focusonhover="true" />');
                 html = layer.FindChildTraverse(pid);
             }
             if (!html) { log("could not create HTML panel"); return null; }
@@ -379,6 +412,7 @@
                 if (!ticking) { ticking = true; tick(); }
             } else {
                 if (settings.visible) showSettings(false);
+                if (keyFocus) takeKeys();
                 win.visible = false;
                 if (!S.keepPlaying || forceSuspend) suspendAll();
             }
